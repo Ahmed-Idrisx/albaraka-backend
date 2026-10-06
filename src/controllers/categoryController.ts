@@ -10,6 +10,7 @@ export const getCategories = asyncHandler(async (_req, res: Response) => {
 export const createCategory = asyncHandler(async (req, res: Response) => {
   const { name, order } = req.body;
   if (!name) throw ApiError.badRequest("اسم التصنيف مطلوب");
+  if (!req.file) throw ApiError.badRequest("صورة التصنيف مطلوبة");
 
   res.status(201).json(await categoryService.create({ name, order }, req.file));
 });

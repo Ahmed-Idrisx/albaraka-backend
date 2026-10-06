@@ -3,7 +3,7 @@ import { Schema, model, Document } from "mongoose";
 export interface ICategory extends Document {
   name: string;
   slug: string;
-  image?: string;
+  image: string;
   order: number;
   createdAt: Date;
 }
@@ -18,7 +18,7 @@ const categorySchema = new Schema<ICategory>(
       lowercase: true,
       trim: true,
     },
-    image: { type: String },
+    image: { type: String, required: true },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },

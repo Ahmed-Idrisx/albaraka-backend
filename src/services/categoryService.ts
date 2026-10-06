@@ -31,8 +31,8 @@ class CategoryService {
     return Category.find().sort({ order: 1, createdAt: 1 });
   }
 
-  async create(data: CategoryInput, file?: Express.Multer.File) {
-    const image = file ? await this.uploadImage(file) : undefined;
+  async create(data: CategoryInput, file: Express.Multer.File) {
+    const image = await this.uploadImage(file);
     return Category.create({
       ...data,
       slug: uniqueSlug(data.name),

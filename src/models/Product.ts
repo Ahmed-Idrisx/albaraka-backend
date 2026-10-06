@@ -10,7 +10,7 @@ export interface IProduct extends Document {
   discountPrice?: number;
   unit: string; // e.g. "كجم", "قطعة" — free text driven by Settings.units
   stock: number;
-  images: string[];
+  image: string;
   isAvailable: boolean;
   createdAt: Date;
 }
@@ -31,7 +31,7 @@ const productSchema = new Schema<IProduct>(
     discountPrice: { type: Number, min: 0 },
     unit: { type: String, required: true },
     stock: { type: Number, required: true, min: 0, default: 0 },
-    images: { type: [String], default: [] },
+    image: { type: String, required: true },
     isAvailable: { type: Boolean, default: true },
   },
   { timestamps: true },
