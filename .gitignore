@@ -1,0 +1,11 @@
+
+node_modules
+dist
+# Ignore environment variables and secrets
+.env
+.env*
+# Keep the example env file in the repo for reference
+!.env.example
+
+
+
