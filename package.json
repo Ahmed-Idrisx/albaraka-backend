@@ -1,0 +1,40 @@
+{
+  "name": "albaraka-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Albaraka fruits & vegetables shop (Express + TypeScript + MongoDB)",
+  "license": "ISC",
+  "author": "Ahmed Idris",
+  "type": "module",
+  "main": "dist/app.js",
+  "scripts": {
+    "start": "node /dist/app.js",
+    "dev": "tsx watch src/app.ts",
+    "build": " tsc",
+    "seed:superadmin": "tsx src/scripts/seedSuperAdmin.ts",
+    "lint": "eslint . --ext .ts"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "imagekit": "^6.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.11.0",
+    "multer": "^2.4.0",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.3.0",
+    "@types/node": "^26.6.4",
+    "@types/web-push": "^3.6.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
