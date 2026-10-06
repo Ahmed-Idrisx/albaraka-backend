@@ -7,6 +7,8 @@ import dns from "dns";
 import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 
+import authRoutes from "./routes/authRoutes.js";
+
 dns.setServers(["8.8.8.8"]);
 await connectDB();
 
@@ -28,6 +30,8 @@ app.use(cookieParser());
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "albaraka-api" });
 });
+
+app.use("/api/auth", authRoutes);
 
 // error handling middlewares
 app.use(notFoundHandler);
