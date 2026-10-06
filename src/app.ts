@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import connectDB from "./config/db.js";
 import dns from "dns";
 import { env } from "./config/env.js";
+import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 
 dns.setServers(["8.8.8.8"]);
 await connectDB();
@@ -28,9 +29,12 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "albaraka-api" });
 });
 
-const port = Number(process.env.PORT);
-app.listen(port, () => {
-  console.log(`Albaraka API running on http://localhost:${port}`);
+// error handling middlewares
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+app.listen(env.PORT, () => {
+  console.log(`Albaraka API running on http://localhost:${env.PORT}`);
 });
 
 export default app;
