@@ -9,6 +9,7 @@ import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import deliveryAreaRoutes from "./routes/deliveryAreaRoutes.js";
 
 dns.setServers(["8.8.8.8"]);
 await connectDB();
@@ -34,6 +35,7 @@ app.get("/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admins", adminRoutes);
+app.use("/api/delivery-areas", deliveryAreaRoutes);
 
 // error handling middlewares
 app.use(notFoundHandler);
