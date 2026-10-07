@@ -4,9 +4,8 @@ import { env } from "./config/env.js";
 import connectDB from "./config/db.js";
 import app from "./app.js";
 
-dns.setServers(["8.8.8.8"]);
-
 try {
+  dns.setServers(["8.8.8.8"]);
   await connectDB();
   app.listen(env.PORT, () => {
     console.log(`Albaraka API running on http://localhost:${env.PORT}`);

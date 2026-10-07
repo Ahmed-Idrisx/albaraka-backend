@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import dns from "node:dns";
 import connectDB from "./config/db.js";
 import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
@@ -25,8 +26,8 @@ app.use(
   }),
 );
 // middlewares
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Render pings this to keep deploys zero-downtime.
@@ -36,6 +37,7 @@ app.get("/health", (_req, res) => {
 
 app.use(async (_req, _res, next) => {
   try {
+    dns.setServers(["8.8.8.8"]);
     await connectDB();
     next();
   } catch (error) {
