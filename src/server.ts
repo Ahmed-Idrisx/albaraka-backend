@@ -1,16 +1,59 @@
 import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 import dns from "node:dns";
-import { env } from "./config/env.js";
 import connectDB from "./config/db.js";
-import app from "./app.js";
+import { env } from "./config/env.js";
+import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 
-try {
-  dns.setServers(["8.8.8.8"]);
-  await connectDB();
-  app.listen(env.PORT, () => {
-    console.log(`Albaraka API running on http://localhost:${env.PORT}`);
-  });
-} catch (error) {
-  console.error("Failed to start Albaraka API:", error);
-  process.exitCode = 1;
+import authRoutes from "./routes/authRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
+import deliveryAreaRoutes from "./routes/deliveryAreaRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
+import cartRoutes from "./routes/cartRoutes.js";
+
+if (env.NODE_ENV !== "production") {
+  dns.setServers(["8.8.8.8", "8.8.4.4"]);
 }
+
+await connectDB();
+
+const app = express();
+
+// CORS configuration
+app.use(
+  cors({
+    origin: env.CORS_ORIGIN,
+    credentials: true, // required for the httpOnly auth cookie
+  }),
+);
+// middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// Render pings this to keep deploys zero-downtime.
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", service: "albaraka-api" });
+});
+
+app.use("/api/auth", authRoutes);
+app.use("/api/admins", adminRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/delivery-areas", deliveryAreaRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/cart", cartRoutes);
+
+// error handling middlewares
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+app.listen(env.PORT, () => {
+  console.log(`Albaraka API running on http://localhost:${env.PORT}`);
+});
