@@ -14,6 +14,7 @@ import categoryRoutes from "./routes/categoryRoutes.js";
 import deliveryAreaRoutes from "./routes/deliveryAreaRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import cartRoutes from "./routes/cartRoutes.js";
 
 dns.setServers(["8.8.8.8"]);
 await connectDB();
@@ -44,6 +45,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/delivery-areas", deliveryAreaRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/cart", cartRoutes);
 
 // error handling middlewares
 app.use(notFoundHandler);
