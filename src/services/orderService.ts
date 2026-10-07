@@ -3,6 +3,7 @@ import Product from "../models/Product.js";
 import { OrderStatus, PaymentStatus } from "../types/index.js";
 import { ApiError } from "../utils/ApiError.js";
 import { deliveryAreaService } from "./deliveryAreaService.js";
+import { pushService } from "./pushService.js";
 
 interface CreateOrderInput {
   customer: {
@@ -107,6 +108,17 @@ class OrderService {
       await this.releaseStock(orderItems);
       throw error;
     }
+
+    // a push failure should not block the order from being created, so we don't await it.
+    pushService
+      .broadcast({
+        title: "طلب جديد 🛒",
+        body: `طلب من ${customer.name} بقيمة ${order.total} جنيه`,
+        url: `/dashboard/orders/${order.id}`,
+      })
+      .catch((error) =>
+        console.error("Order push notification failed:", error),
+      );
 
     return order;
   }
