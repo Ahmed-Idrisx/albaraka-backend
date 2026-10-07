@@ -3,7 +3,6 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/db.js";
-import dns from "dns";
 import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 
@@ -15,9 +14,6 @@ import deliveryAreaRoutes from "./routes/deliveryAreaRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
-
-dns.setServers(["8.8.8.8"]);
-await connectDB();
 
 const app = express();
 
@@ -38,6 +34,15 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "albaraka-api" });
 });
 
+app.use(async (_req, _res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/admins", adminRoutes);
 app.use("/api/settings", settingsRoutes);
@@ -50,9 +55,5 @@ app.use("/api/cart", cartRoutes);
 // error handling middlewares
 app.use(notFoundHandler);
 app.use(errorHandler);
-
-app.listen(env.PORT, () => {
-  console.log(`Albaraka API running on http://localhost:${env.PORT}`);
-});
 
 export default app;

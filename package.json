@@ -5,10 +5,10 @@
   "license": "ISC",
   "author": "Ahmed Idris",
   "type": "module",
-  "main": "dist/app.js",
+  "main": "dist/server.js",
   "scripts": {
-    "start": "node dist/app.js",
-    "dev": "tsx watch src/app.ts",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
     "build": " tsc",
     "seed:superadmin": "tsx src/scripts/seedSuperAdmin.ts",
     "lint": "eslint . --ext .ts"

@@ -215,14 +215,21 @@ This backend follows a secure-by-default pattern:
 
 ## Deployment Guidance
 
-For deployment, use a production-ready environment with:
+Vercel serves the Express app exported from `src/app.ts` as a serverless
+function. Configure these environment variables in the Vercel project settings
+before deploying:
 
-- a managed MongoDB instance
-- protected environment variables
-- a valid `CORS_ORIGIN`
-- a secure `JWT_SECRET`
-- valid ImageKit and VAPID credentials
-- reverse proxy or load balancer in front of the Node process if required
+- `NODE_ENV=production`
+- `MONGODB_URI`
+- `CORS_ORIGIN`
+- `JWT_SECRET` (at least 32 characters)
+- `IMAGEKIT_PUBLIC_KEY`, `IMAGEKIT_PRIVATE_KEY`, and `IMAGEKIT_URL_ENDPOINT`
+
+`SUPERADMIN_NAME`, `SUPERADMIN_EMAIL`, and `SUPERADMIN_PASSWORD` are needed only
+when running the seed script. VAPID values are optional unless push
+notifications are enabled. After setting the variables, redeploy the project.
+
+For local production-style startup, run `npm run build` and then `npm start`.
 
 ## License
 
