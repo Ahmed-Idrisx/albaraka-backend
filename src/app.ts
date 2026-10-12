@@ -2,7 +2,6 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import dns from "node:dns";
 import connectDB from "./config/db.js";
 import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
@@ -16,13 +15,9 @@ import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 
-if (env.NODE_ENV !== "production") {
-  dns.setServers(["8.8.8.8", "8.8.4.4"]);
-}
+const app = express();
 
 await connectDB();
-
-const app = express();
 
 // CORS configuration
 app.use(
@@ -57,3 +52,5 @@ app.use(errorHandler);
 app.listen(env.PORT, () => {
   console.log(`Albaraka API running on http://localhost:${env.PORT}`);
 });
+
+export default app;
