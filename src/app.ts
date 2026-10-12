@@ -49,8 +49,10 @@ app.use("/api/cart", cartRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-app.listen(env.PORT, () => {
-  console.log(`Albaraka API running on http://localhost:${env.PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(env.PORT, () => {
+    console.log(`Albaraka API running on http://localhost:${env.PORT}`);
+  });
+}
 
 export default app;
