@@ -20,7 +20,7 @@ export const login = asyncHandler(async (req, res: Response) => {
 
   const { token, user } = await authService.login(email, password);
   res.cookie("token", token, cookieOptions);
-  res.json({ user });
+  res.json({ user, token });
 });
 
 export const logout = asyncHandler(async (_req, res: Response) => {

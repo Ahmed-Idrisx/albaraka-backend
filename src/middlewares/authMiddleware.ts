@@ -10,7 +10,10 @@ export const protect = (
   _res: Response,
   next: NextFunction,
 ) => {
-  const token = req.cookies?.token;
+  const bearer = req.headers.authorization?.startsWith("Bearer ")
+    ? req.headers.authorization.slice(7)
+    : undefined;
+  const token = req.cookies?.token || bearer;
 
   if (!token) {
     return next(ApiError.unauthorized("يجب تسجيل الدخول"));
