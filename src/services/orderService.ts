@@ -2,8 +2,10 @@ import Order, { IOrder, IOrderItem } from "../models/Order.js";
 import Product from "../models/Product.js";
 import { OrderStatus, PaymentStatus } from "../types/index.js";
 import { ApiError } from "../utils/ApiError.js";
+import { paginated } from "../utils/parse.js";
 import { deliveryAreaService } from "./deliveryAreaService.js";
 import { pushService } from "./pushService.js";
+import { settingsService } from "./settingsService.js";
 
 interface CreateOrderInput {
   customer: {
@@ -19,7 +21,7 @@ interface CreateOrderInput {
 }
 
 /** The part of an order line that inventory cares about. */
-type StockLine = Pick<IOrderItem, "product" | "name" | "quantity">;
+type StockLine = Pick<IOrderItem, "product" | "name" | "nameEn" | "quantity">;
 
 /** The fields an order is created with — the rest of the schema has defaults. */
 type NewOrder = Pick<
@@ -33,28 +35,49 @@ type NewOrder = Pick<
   | "total"
 >;
 
+interface ListFilters {
+  status?: OrderStatus;
+  page: number;
+  limit: number;
+  skip: number;
+}
+
+/** The dashboard table only needs a summary of each order. */
+const SUMMARY_FIELDS =
+  "orderNumber customer.name customer.phone total status paymentStatus createdAt";
+
 class OrderService {
-  async list() {
-    return Order.find().sort({ createdAt: 1 });
+  /** Newest first, so the dashboard shows incoming orders at the top. */
+  async list({ status, page, limit, skip }: ListFilters) {
+    const filter = status ? { status } : {};
+    const [items, total] = await Promise.all([
+      Order.find(filter)
+        .select(SUMMARY_FIELDS)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments(filter),
+    ]);
+    return paginated(items, total, { page, limit });
   }
 
   async getById(id: string) {
     const order = await Order.findById(id);
-    if (!order) throw ApiError.notFound("الطلب غير موجود");
+    if (!order) throw ApiError.notFound("orderNotFound");
     return order;
   }
 
   async trackOrder(orderNumber: string) {
     const order = await Order.findOne({
       orderNumber: orderNumber.trim().toUpperCase(),
-    }).select("-customer");
+    }).select("orderNumber status items subtotal deliveryFee total createdAt");
 
-    if (!order) throw ApiError.notFound("لم يتم العثور على طلب بهذا الرقم");
+    if (!order) throw ApiError.notFound("orderNumberNotFound");
     return order;
   }
 
   async create({ customer, items, deliveryAreaId }: CreateOrderInput) {
-    if (!items?.length) throw ApiError.badRequest("السلة فارغة");
+    if (!items?.length) throw ApiError.badRequest("emptyCart");
 
     const lines = this.mergeLines(items);
 
@@ -64,20 +87,26 @@ class OrderService {
     const products = await Product.find({
       _id: { $in: lines.map((line) => line.productId) },
     });
+    // So the order keeps an English unit even for older products.
+    await settingsService.fillUnitEn(products);
 
     const orderItems: IOrderItem[] = lines.map((line) => {
       const product = products.find(
         (candidate) => candidate.id === line.productId,
       );
-      if (!product) throw ApiError.badRequest("أحد المنتجات لم يعد متاحًا");
+      if (!product) throw ApiError.badRequest("productGone");
       if (!product.isAvailable)
-        throw ApiError.badRequest(`المنتج "${product.name}" غير متاح حاليًا`);
+        throw ApiError.badRequest("productUnavailable", {
+          name: { ar: product.name, en: product.nameEn },
+        });
 
       return {
         product: product._id as IOrderItem["product"],
         name: product.name,
+        nameEn: product.nameEn,
         price: product.discountPrice ?? product.price,
         unit: product.unit,
+        unitEn: product.unitEn,
         quantity: line.quantity,
       };
     });
@@ -97,7 +126,12 @@ class OrderService {
         customer,
         items: orderItems,
         deliveryArea: area
-          ? { area: area._id, name: area.name, price: area.price }
+          ? {
+              area: area._id,
+              name: area.name,
+              nameEn: area.nameEn,
+              price: area.price,
+            }
           : undefined,
         subtotal,
         deliveryFee,
@@ -120,12 +154,13 @@ class OrderService {
         console.error("Order push notification failed:", error),
       );
 
-    return order;
+    // The customer only needs the number to track it and the total to pay.
+    return { orderNumber: order.orderNumber, total: order.total };
   }
 
   async updateStatus(id: string, status: OrderStatus) {
     const order = await Order.findById(id);
-    if (!order) throw ApiError.notFound("الطلب غير موجود");
+    if (!order) throw ApiError.notFound("orderNotFound");
 
     const wasCancelled = order.status === "cancelled";
     const isCancelling = status === "cancelled";
@@ -149,7 +184,7 @@ class OrderService {
       { paymentStatus },
       { new: true },
     );
-    if (!order) throw ApiError.notFound("الطلب غير موجود");
+    if (!order) throw ApiError.notFound("orderNotFound");
     return order;
   }
 
@@ -200,12 +235,18 @@ class OrderService {
         { $group: { _id: "$status", count: { $sum: 1 } } },
       ]),
 
-      Order.aggregate<{ _id: string; quantity: number; revenue: number }>([
+      Order.aggregate<{
+        _id: string;
+        nameEn?: string;
+        quantity: number;
+        revenue: number;
+      }>([
         { $match: sold },
         { $unwind: "$items" },
         {
           $group: {
             _id: "$items.name",
+            nameEn: { $last: "$items.nameEn" },
             quantity: { $sum: "$items.quantity" },
             revenue: {
               $sum: { $multiply: ["$items.price", "$items.quantity"] },
@@ -220,8 +261,9 @@ class OrderService {
     return {
       daily: this.fillDays(since, days, daily),
       byStatus: byStatus.map(({ _id, count }) => ({ status: _id, count })),
-      topProducts: topProducts.map(({ _id, quantity, revenue }) => ({
+      topProducts: topProducts.map(({ _id, nameEn, quantity, revenue }) => ({
         name: _id,
+        nameEn: nameEn ?? "",
         quantity,
         revenue,
       })),
@@ -255,7 +297,7 @@ class OrderService {
 
     for (const item of items) {
       if (!Number.isFinite(item.quantity) || item.quantity < 1) {
-        throw ApiError.badRequest("الكمية يجب أن تكون 1 على الأقل");
+        throw ApiError.badRequest("invalidQuantity");
       }
 
       totals.set(
@@ -293,9 +335,9 @@ class OrderService {
       );
       if (result.modifiedCount !== 1) {
         await this.releaseStock(taken);
-        throw ApiError.badRequest(
-          `الكمية المطلوبة من "${item.name}" غير متوفرة`,
-        );
+        throw ApiError.badRequest("notEnoughStock", {
+          name: { ar: item.name, en: item.nameEn },
+        });
       }
 
       taken.push(item);

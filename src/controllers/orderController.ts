@@ -3,6 +3,7 @@ import { orderService } from "../services/orderService.js";
 import { asyncHandler, IdParam } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { OrderStatus, PaymentStatus } from "../types/index.js";
+import { toPagination } from "../utils/parse.js";
 
 const ORDER_STATUSES: OrderStatus[] = [
   "pending",
@@ -16,25 +17,41 @@ const ORDER_STATUSES: OrderStatus[] = [
 /** Public — guest checkout. */
 export const createOrder = asyncHandler(async (req, res: Response) => {
   const { customer, items, deliveryAreaId } = req.body;
-  if (!customer?.name || !customer?.phone || !customer?.address) {
-    throw ApiError.badRequest("الاسم ورقم الهاتف والعنوان مطلوبة");
+  const name = String(customer?.name ?? "").trim();
+  const phone = String(customer?.phone ?? "").trim();
+  const address = String(customer?.address ?? "").trim();
+  if (!name || !phone || !address) {
+    throw ApiError.badRequest("customerFieldsRequired");
   }
-  res
-    .status(201)
-    .json(await orderService.create({ customer, items, deliveryAreaId }));
+  if (!Array.isArray(items)) throw ApiError.badRequest("invalidCart");
+
+  res.status(201).json(
+    await orderService.create({
+      // Only the fields the order stores — never the raw body.
+      customer: { name, phone, address, notes: typeof customer.notes === "string" ? customer.notes.trim() : undefined },
+      items,
+      deliveryAreaId,
+    }),
+  );
 });
 
 /** Public — guests look up their own order by its number. */
 export const trackOrder = asyncHandler(async (req, res: Response) => {
   const { orderNumber } = req.query;
-  if (!orderNumber) throw ApiError.badRequest("رقم الطلب مطلوب");
+  if (!orderNumber) throw ApiError.badRequest("orderNumberRequired");
 
   res.json(await orderService.trackOrder(String(orderNumber)));
 });
 
-/** Dashboard — polled every 5 seconds by TanStack Query. */
-export const getOrders = asyncHandler(async (_req, res: Response) => {
-  res.json(await orderService.list());
+/** GET /orders?status=&page=&limit= — dashboard list, newest first. */
+export const getOrders = asyncHandler(async (req, res: Response) => {
+  const status = req.query.status as OrderStatus | undefined;
+  res.json(
+    await orderService.list({
+      status: status && ORDER_STATUSES.includes(status) ? status : undefined,
+      ...toPagination(req.query),
+    }),
+  );
 });
 
 export const getOrder = asyncHandler<IdParam>(async (req, res: Response) => {
@@ -45,7 +62,7 @@ export const updateOrderStatus = asyncHandler<IdParam>(
   async (req, res: Response) => {
     const { status } = req.body;
     if (!ORDER_STATUSES.includes(status))
-      throw ApiError.badRequest("حالة الطلب غير صحيحة");
+      throw ApiError.badRequest("invalidStatus");
 
     res.json(await orderService.updateStatus(req.params.id, status));
   },
@@ -55,7 +72,7 @@ export const updatePaymentStatus = asyncHandler<IdParam>(
   async (req, res: Response) => {
     const { paymentStatus } = req.body as { paymentStatus: PaymentStatus };
     if (!["unpaid", "paid"].includes(paymentStatus))
-      throw ApiError.badRequest("حالة الدفع غير صحيحة");
+      throw ApiError.badRequest("invalidPaymentStatus");
 
     res.json(
       await orderService.updatePaymentStatus(req.params.id, paymentStatus),
