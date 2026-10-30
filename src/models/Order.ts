@@ -4,8 +4,10 @@ import { OrderStatus, PaymentStatus } from "../types/index.js";
 export interface IOrderItem {
   product: Types.ObjectId;
   name: string; // snapshot at order time
+  nameEn?: string;
   price: number; // snapshot at order time
   unit: string;
+  unitEn?: string;
   quantity: number;
 }
 
@@ -23,6 +25,7 @@ export interface IOrder extends Document {
   deliveryArea?: {
     area: Types.ObjectId;
     name: string;
+    nameEn?: string;
     price: number;
   };
   subtotal: number;
@@ -38,8 +41,10 @@ const orderItemSchema = new Schema<IOrderItem>(
   {
     product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
     name: { type: String, required: true },
+    nameEn: { type: String },
     price: { type: Number, required: true },
     unit: { type: String, required: true },
+    unitEn: { type: String },
     quantity: { type: Number, required: true, min: 1 },
   },
   { _id: false },
@@ -63,6 +68,7 @@ const orderSchema = new Schema<IOrder>(
     deliveryArea: {
       area: { type: Schema.Types.ObjectId, ref: "DeliveryArea" },
       name: { type: String },
+      nameEn: { type: String },
       price: { type: Number },
     },
     subtotal: { type: Number, required: true },

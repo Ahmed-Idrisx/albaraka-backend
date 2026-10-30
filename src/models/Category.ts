@@ -2,6 +2,8 @@ import { Schema, model, Document } from "mongoose";
 
 export interface ICategory extends Document {
   name: string;
+  /** English name; the storefront falls back to `name` when it's empty. */
+  nameEn: string;
   slug: string;
   image: string;
   order: number;
@@ -11,6 +13,7 @@ export interface ICategory extends Document {
 const categorySchema = new Schema<ICategory>(
   {
     name: { type: String, required: true, trim: true },
+    nameEn: { type: String, trim: true, default: "" },
     slug: {
       type: String,
       required: true,
