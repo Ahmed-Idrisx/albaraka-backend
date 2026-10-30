@@ -4,6 +4,7 @@ import {
   getProduct,
   getProductBySlug,
   getHomeSections,
+  getPriceRange,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -16,6 +17,7 @@ const router = Router();
 // Public — the literal paths must be declared before "/:id" or they'd be read as ids.
 router.get("/", getProducts);
 router.get("/home", getHomeSections);
+router.get("/price-range", getPriceRange);
 router.get("/slug/:slug", getProductBySlug);
 router.get("/:id", getProduct);
 
