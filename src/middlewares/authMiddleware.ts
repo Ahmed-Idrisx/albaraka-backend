@@ -16,7 +16,7 @@ export const protect = (
   const token = req.cookies?.token || bearer;
 
   if (!token) {
-    return next(ApiError.unauthorized("يجب تسجيل الدخول"));
+    return next(ApiError.unauthorized("loginRequired"));
   }
 
   try {
@@ -24,7 +24,7 @@ export const protect = (
     req.user = decoded;
     return next();
   } catch {
-    return next(ApiError.unauthorized("جلسة غير صالحة، سجل الدخول مرة أخرى"));
+    return next(ApiError.unauthorized("sessionInvalid"));
   }
 };
 

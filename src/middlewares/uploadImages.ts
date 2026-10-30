@@ -9,7 +9,7 @@ export const upload = multer({
   limits: { fileSize: MAX_FILE_SIZE },
   fileFilter: (_req, file, cb) => {
     if (!file.mimetype.startsWith("image/")) {
-      return cb(ApiError.badRequest("الملف المرفوع يجب أن يكون صورة"));
+      return cb(ApiError.badRequest("imageOnly"));
     }
     return cb(null, true);
   },
