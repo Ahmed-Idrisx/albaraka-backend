@@ -5,7 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 
 export const validateCart = asyncHandler(async (req, res: Response) => {
   const { items, deliveryAreaId } = req.body;
-  if (!Array.isArray(items)) throw ApiError.badRequest("السلة غير صحيحة");
+  if (!Array.isArray(items)) throw ApiError.badRequest("invalidCart");
 
   res.json(await cartService.validate(items, deliveryAreaId));
 });
