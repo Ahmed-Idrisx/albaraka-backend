@@ -347,10 +347,18 @@ class OrderService {
   private async releaseStock(items: StockLine[]) {
     await Promise.all(
       items.map((item) =>
-        Product.updateOne(
-          { _id: item.product },
-          { $inc: { stock: item.quantity } },
-        ),
+        Product.updateOne({ _id: item.product }, [
+          {
+            $set: {
+              stock: { $add: ["$stock", item.quantity] },
+              // Selling out closes a product automatically, so getting stock
+              // back reopens it. One an admin closed with stock left stays closed.
+              isAvailable: {
+                $cond: [{ $lte: ["$stock", 0] }, true, "$isAvailable"],
+              },
+            },
+          },
+        ]),
       ),
     );
   }
