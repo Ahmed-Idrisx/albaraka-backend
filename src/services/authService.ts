@@ -21,12 +21,12 @@ class AuthService {
       "+password",
     );
     if (!user) {
-      throw ApiError.unauthorized("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      throw ApiError.unauthorized("wrongCredentials");
     }
 
     const matches = await bcrypt.compare(password, user.password);
     if (!matches) {
-      throw ApiError.unauthorized("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      throw ApiError.unauthorized("wrongCredentials");
     }
 
     const payload: AuthUser = {
@@ -41,7 +41,7 @@ class AuthService {
 
   async getProfile(userId: string) {
     const user = await User.findById(userId);
-    if (!user) throw ApiError.notFound("المستخدم غير موجود");
+    if (!user) throw ApiError.notFound("userNotFound");
     return { id: user.id, name: user.name, email: user.email, role: user.role };
   }
 }

@@ -13,19 +13,19 @@ class AdminService {
   /** Guards every write: the superadmin account cannot be edited or deleted from the UI. */
   private async getEditableAdmin(id: string) {
     const user = await User.findById(id);
-    if (!user) throw ApiError.notFound("المستخدم غير موجود");
+    if (!user) throw ApiError.notFound("userNotFound");
     if (user.role === "superadmin") {
-      throw ApiError.forbidden("لا يمكن تعديل أو حذف حساب المدير العام");
+      throw ApiError.forbidden("superadminLocked");
     }
     return user;
   }
   async list() {
-    return User.find().sort({ createdAt: 1 });
+    return User.find().select("name email role createdAt").sort({ createdAt: 1 });
   }
 
   async create({ name, email, password }: AdminInput) {
     const exists = await User.exists({ email: email.toLowerCase() });
-    if (exists) throw ApiError.conflict("هذا البريد الإلكتروني مستخدم بالفعل");
+    if (exists) throw ApiError.conflict("emailTaken");
 
     const user = await User.create({
       name,

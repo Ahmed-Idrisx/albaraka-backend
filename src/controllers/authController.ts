@@ -2,6 +2,7 @@ import { Response } from "express";
 import { authService } from "../services/authService.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
+import { t } from "../i18n/messages.js";
 import { AuthRequest } from "../types/index.js";
 import { env } from "../config/env.js";
 
@@ -16,7 +17,7 @@ const cookieOptions = {
 export const login = asyncHandler(async (req, res: Response) => {
   const { email, password } = req.body;
   if (!email || !password)
-    throw ApiError.badRequest("البريد الإلكتروني وكلمة المرور مطلوبان");
+    throw ApiError.badRequest("credentialsRequired");
 
   const { token, user } = await authService.login(email, password);
   res.cookie("token", token, cookieOptions);
@@ -26,7 +27,7 @@ export const login = asyncHandler(async (req, res: Response) => {
 export const logout = asyncHandler(async (_req, res: Response) => {
   res.clearCookie("token", { ...cookieOptions, maxAge: undefined });
   // maxAge must be undefined when clearing the cookie, otherwise it won't be cleared in some browsers (e.g. Safari).
-  res.json({ message: "تم تسجيل الخروج" });
+  res.json({ message: t(_req, "loggedOut") });
 });
 
 export const me = asyncHandler(async (req: AuthRequest, res: Response) => {
