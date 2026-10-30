@@ -1,6 +1,7 @@
 import webpush from "web-push";
+import { env } from "./env.js";
 
-const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } = process.env;
+const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } = env;
 
 let configured = false;
 

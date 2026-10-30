@@ -14,6 +14,7 @@ import deliveryAreaRoutes from "./routes/deliveryAreaRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
+import pushRoutes from "./routes/pushRoutes.js";
 
 const app = express();
 
@@ -31,7 +32,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Render pings this to keep deploys zero-downtime.
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "albaraka-api" });
 });
@@ -44,6 +44,7 @@ app.use("/api/delivery-areas", deliveryAreaRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/push", pushRoutes);
 
 // error handling middlewares
 app.use(notFoundHandler);
