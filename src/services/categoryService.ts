@@ -6,6 +6,7 @@ import { uniqueSlug } from "../utils/slugify.js";
 
 interface CategoryInput {
   name: string;
+  nameEn?: string;
   order?: number;
 }
 
@@ -28,16 +29,14 @@ class CategoryService {
   }
 
   async getAll() {
-    return Category.find().sort({ order: 1, createdAt: 1 });
+    return Category.find()
+      .select("name nameEn slug image order")
+      .sort({ order: 1, createdAt: 1 });
   }
 
   async create(data: CategoryInput, file: Express.Multer.File) {
     const image = await this.uploadImage(file);
-    return Category.create({
-      ...data,
-      slug: uniqueSlug(data.name),
-      ...(image && { image }),
-    });
+    return Category.create({ ...data, slug: uniqueSlug(data.name), image });
   }
 
   async update(
@@ -46,12 +45,13 @@ class CategoryService {
     file?: Express.Multer.File,
   ) {
     const category = await Category.findById(id);
-    if (!category) throw ApiError.notFound("التصنيف غير موجود");
+    if (!category) throw ApiError.notFound("categoryNotFound");
 
     if (data.name !== undefined) {
       category.name = data.name;
       category.slug = uniqueSlug(data.name);
     }
+    if (data.nameEn !== undefined) category.nameEn = data.nameEn;
     if (data.order !== undefined) category.order = data.order;
     if (file) category.image = await this.uploadImage(file);
 
@@ -62,13 +62,11 @@ class CategoryService {
   async remove(id: string) {
     const productCount = await Product.countDocuments({ category: id });
     if (productCount > 0) {
-      throw ApiError.conflict(
-        `لا يمكن حذف التصنيف لأنه يحتوي على ${productCount} منتج`,
-      );
+      throw ApiError.conflict("categoryHasProducts", { count: productCount });
     }
 
     const category = await Category.findByIdAndDelete(id);
-    if (!category) throw ApiError.notFound("التصنيف غير موجود");
+    if (!category) throw ApiError.notFound("categoryNotFound");
   }
 }
 
