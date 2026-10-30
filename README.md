@@ -178,7 +178,10 @@ node dist/app.js
 
 ## API Overview
 
-The application exposes a modular REST API grouped by business domain.
+The application exposes a modular REST API grouped by business domain. The
+complete frontend integration contract—including request and response shapes,
+authentication, validation, and current endpoint limitations—is documented in
+[Frontend API Integration Guide](./FRONTEND_API.md).
 
 ### Core Endpoints
 
@@ -193,7 +196,7 @@ The application exposes a modular REST API grouped by business domain.
 - `GET /api/categories` — list categories
 - `GET /api/delivery-areas` — list delivery areas
 - `GET /api/orders` — view orders (protected)
-- `GET /api/cart` — cart access (protected)
+- `POST /api/cart/validate` — validate client-held cart prices and stock
 
 Admin-protected routes are available for:
 
